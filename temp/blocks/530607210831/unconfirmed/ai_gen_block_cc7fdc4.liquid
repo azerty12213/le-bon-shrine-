@@ -1,6 +1,604 @@
+{% doc %}
+  @prompt
+    shipping checkpoint
+{% enddoc %}
+{% assign ai_gen_id = block.id | replace: '_', '' | downcase %}
+
+{% style %}
+  .ai-shipping-checkpoint-{{ ai_gen_id }} {
+    display: block;
+    width: {{ block.settings.desktop_width_percent }}%;
+    max-width: 100%;
+    padding: 32px;
+    background-color: {{ block.settings.background_color }};
+    border-radius: {{ block.settings.border_radius }}px;
+  }
+
+  .ai-shipping-checkpoint__header-{{ ai_gen_id }} {
+    margin-bottom: 24px;
+  }
+
+  .ai-shipping-checkpoint__title-{{ ai_gen_id }} {
+    font-size: {{ block.settings.title_size }}px;
+    color: {{ block.settings.text_color }};
+    margin: 0 0 8px 0;
+    font-weight: 700;
+  }
+
+  .ai-shipping-checkpoint__subtitle-{{ ai_gen_id }} {
+    font-size: {{ block.settings.subtitle_size }}px;
+    color: {{ block.settings.text_color }};
+    opacity: 0.7;
+    margin: 0;
+  }
+
+  .ai-shipping-checkpoint__progress-{{ ai_gen_id }} {
+    position: relative;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+  }
+
+  .ai-shipping-checkpoint__step-{{ ai_gen_id }} {
+    position: relative;
+    padding-left: 48px;
+    padding-bottom: 32px;
+  }
+
+  .ai-shipping-checkpoint__step-{{ ai_gen_id }}:last-child {
+    padding-bottom: 0;
+  }
+
+  .ai-shipping-checkpoint__step-{{ ai_gen_id }}:not(:last-child)::before {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 32px;
+    width: 2px;
+    height: calc(100% - 32px);
+    background-color: {{ block.settings.line_color }};
+  }
+
+  .ai-shipping-checkpoint__step-{{ ai_gen_id }}.completed::before {
+    background-color: {{ block.settings.completed_color }};
+  }
+
+  .ai-shipping-checkpoint__step-{{ ai_gen_id }}.active::before {
+    background: linear-gradient(to bottom, {{ block.settings.completed_color }} 0%, {{ block.settings.line_color }} 100%);
+  }
+
+  .ai-shipping-checkpoint__icon-{{ ai_gen_id }} {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: {{ block.settings.line_color }};
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: {{ block.settings.background_color }};
+    font-weight: 600;
+    font-size: 14px;
+  }
+
+  .ai-shipping-checkpoint__step-{{ ai_gen_id }}.completed .ai-shipping-checkpoint__icon-{{ ai_gen_id }} {
+    background-color: {{ block.settings.completed_color }};
+  }
+
+  .ai-shipping-checkpoint__step-{{ ai_gen_id }}.active .ai-shipping-checkpoint__icon-{{ ai_gen_id }} {
+    background-color: {{ block.settings.active_color }};
+    box-shadow: 0 0 0 4px {{ block.settings.active_color }}33;
+  }
+
+  .ai-shipping-checkpoint__icon-{{ ai_gen_id }} svg {
+    width: 16px;
+    height: 16px;
+    stroke-width: 2.5px;
+  }
+
+  .ai-shipping-checkpoint__content-{{ ai_gen_id }} {
+    min-height: 32px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .ai-shipping-checkpoint__step-title-{{ ai_gen_id }} {
+    font-size: {{ block.settings.step_title_size }}px;
+    color: {{ block.settings.text_color }};
+    margin: 0 0 4px 0;
+    font-weight: 600;
+  }
+
+  .ai-shipping-checkpoint__step-{{ ai_gen_id }}.active .ai-shipping-checkpoint__step-title-{{ ai_gen_id }} {
+    color: {{ block.settings.active_color }};
+  }
+
+  .ai-shipping-checkpoint__step-description-{{ ai_gen_id }} {
+    font-size: {{ block.settings.step_description_size }}px;
+    color: {{ block.settings.text_color }};
+    opacity: 0.7;
+    margin: 0 0 4px 0;
+  }
+
+  .ai-shipping-checkpoint__step-date-{{ ai_gen_id }} {
+    font-size: {{ block.settings.step_date_size }}px;
+    color: {{ block.settings.text_color }};
+    opacity: 0.5;
+    margin: 0;
+  }
+
+  @media screen and (max-width: 749px) {
+    .ai-shipping-checkpoint-{{ ai_gen_id }} {
+      padding: 24px;
+    }
+
+    .ai-shipping-checkpoint__step-{{ ai_gen_id }} {
+      padding-left: 40px;
+      padding-bottom: 24px;
+    }
+
+    .ai-shipping-checkpoint__icon-{{ ai_gen_id }} {
+      width: 28px;
+      height: 28px;
+    }
+
+    .ai-shipping-checkpoint__icon-{{ ai_gen_id }} svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    .ai-shipping-checkpoint__step-{{ ai_gen_id }}:not(:last-child)::before {
+      left: 13px;
+      top: 28px;
+      height: calc(100% - 28px);
+    }
+  }
+{% endstyle %}
+
+<shipping-checkpoint-{{ ai_gen_id }}
+  class="ai-shipping-checkpoint-{{ ai_gen_id }}"
+  {{ block.shopify_attributes }}
+>
+  <div class="ai-shipping-checkpoint__header-{{ ai_gen_id }}">
+    {% if block.settings.title != blank %}
+      <h2 class="ai-shipping-checkpoint__title-{{ ai_gen_id }}">{{ block.settings.title }}</h2>
+    {% endif %}
+    {% if block.settings.subtitle != blank %}
+      <p class="ai-shipping-checkpoint__subtitle-{{ ai_gen_id }}">{{ block.settings.subtitle }}</p>
+    {% endif %}
+  </div>
+
+  <ul class="ai-shipping-checkpoint__progress-{{ ai_gen_id }}">
+    {% for i in (1..5) %}
+      {% liquid
+        assign step_enabled_key = 'step_' | append: i | append: '_enabled'
+        assign step_title_key = 'step_' | append: i | append: '_title'
+        assign step_description_key = 'step_' | append: i | append: '_description'
+        assign step_date_key = 'step_' | append: i | append: '_date'
+        assign step_status_key = 'step_' | append: i | append: '_status'
+
+        assign step_enabled = block.settings[step_enabled_key]
+        assign step_title = block.settings[step_title_key]
+        assign step_description = block.settings[step_description_key]
+        assign step_date = block.settings[step_date_key]
+        assign step_status = block.settings[step_status_key]
+      %}
+
+      {% if step_enabled %}
+        <li class="ai-shipping-checkpoint__step-{{ ai_gen_id }} {{ step_status }}" data-step="{{ i }}">
+          <div class="ai-shipping-checkpoint__icon-{{ ai_gen_id }}">
+            {% if step_status == 'completed' %}
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+            {% else %}
+              {{ i }}
+            {% endif %}
+          </div>
+          <div class="ai-shipping-checkpoint__content-{{ ai_gen_id }}">
+            {% if step_title != blank %}
+              <h3 class="ai-shipping-checkpoint__step-title-{{ ai_gen_id }}">{{ step_title }}</h3>
+            {% endif %}
+            {% if step_description != blank %}
+              <p class="ai-shipping-checkpoint__step-description-{{ ai_gen_id }}">{{ step_description }}</p>
+            {% endif %}
+            {% if step_date != blank %}
+              <p class="ai-shipping-checkpoint__step-date-{{ ai_gen_id }}">{{ step_date }}</p>
+            {% endif %}
+          </div>
+        </li>
+      {% endif %}
+    {% endfor %}
+  </ul>
+</shipping-checkpoint-{{ ai_gen_id }}>
+
+<script>
+  (function() {
+    class ShippingCheckpoint{{ ai_gen_id }} extends HTMLElement {
+      constructor() {
+        super();
+      }
+
+      connectedCallback() {
+        this.steps = this.querySelectorAll('.ai-shipping-checkpoint__step-{{ ai_gen_id }}');
+      }
+    }
+
+    customElements.define('shipping-checkpoint-{{ ai_gen_id }}', ShippingCheckpoint{{ ai_gen_id }});
+  })();
+</script>
+
 {% schema %}
- {
-   "name": "AI_Block",
-   "tag": "shopify-ai-generated-block"
- }
+{
+  "name": "Shipping checkpoint",
+  "settings": [
+    {
+      "type": "header",
+      "content": "General"
+    },
+    {
+      "type": "inline_richtext",
+      "id": "title",
+      "label": "Title",
+      "default": "Shipping progress"
+    },
+    {
+      "type": "inline_richtext",
+      "id": "subtitle",
+      "label": "Subtitle",
+      "default": "Track your order status"
+    },
+    {
+      "type": "range",
+      "id": "desktop_width_percent",
+      "label": "Desktop width",
+      "min": 50,
+      "max": 100,
+      "step": 5,
+      "unit": "%",
+      "default": 100
+    },
+    {
+      "type": "header",
+      "content": "Colors"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text",
+      "default": "#1a1a1a"
+    },
+    {
+      "type": "color",
+      "id": "line_color",
+      "label": "Line and pending icon",
+      "default": "#e0e0e0"
+    },
+    {
+      "type": "color",
+      "id": "completed_color",
+      "label": "Completed",
+      "default": "#00a341"
+    },
+    {
+      "type": "color",
+      "id": "active_color",
+      "label": "Active",
+      "default": "#00badb"
+    },
+    {
+      "type": "header",
+      "content": "Style"
+    },
+    {
+      "type": "range",
+      "id": "border_radius",
+      "label": "Border radius",
+      "min": 0,
+      "max": 40,
+      "step": 4,
+      "unit": "px",
+      "default": 24
+    },
+    {
+      "type": "range",
+      "id": "title_size",
+      "label": "Title size",
+      "min": 16,
+      "max": 40,
+      "step": 2,
+      "unit": "px",
+      "default": 24
+    },
+    {
+      "type": "range",
+      "id": "subtitle_size",
+      "label": "Subtitle size",
+      "min": 12,
+      "max": 24,
+      "step": 1,
+      "unit": "px",
+      "default": 14
+    },
+    {
+      "type": "range",
+      "id": "step_title_size",
+      "label": "Step title size",
+      "min": 12,
+      "max": 24,
+      "step": 1,
+      "unit": "px",
+      "default": 16
+    },
+    {
+      "type": "range",
+      "id": "step_description_size",
+      "label": "Step description size",
+      "min": 12,
+      "max": 20,
+      "step": 1,
+      "unit": "px",
+      "default": 14
+    },
+    {
+      "type": "range",
+      "id": "step_date_size",
+      "label": "Step date size",
+      "min": 10,
+      "max": 16,
+      "step": 1,
+      "unit": "px",
+      "default": 12
+    },
+    {
+      "type": "header",
+      "content": "Step 1"
+    },
+    {
+      "type": "checkbox",
+      "id": "step_1_enabled",
+      "label": "Enable step 1",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "step_1_title",
+      "label": "Title",
+      "default": "Order confirmed"
+    },
+    {
+      "type": "text",
+      "id": "step_1_description",
+      "label": "Description",
+      "default": "Your order has been received"
+    },
+    {
+      "type": "text",
+      "id": "step_1_date",
+      "label": "Date"
+    },
+    {
+      "type": "select",
+      "id": "step_1_status",
+      "label": "Status",
+      "options": [
+        {
+          "value": "completed",
+          "label": "Completed"
+        },
+        {
+          "value": "active",
+          "label": "Active"
+        },
+        {
+          "value": "pending",
+          "label": "Pending"
+        }
+      ],
+      "default": "completed"
+    },
+    {
+      "type": "header",
+      "content": "Step 2"
+    },
+    {
+      "type": "checkbox",
+      "id": "step_2_enabled",
+      "label": "Enable step 2",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "step_2_title",
+      "label": "Title",
+      "default": "Processing"
+    },
+    {
+      "type": "text",
+      "id": "step_2_description",
+      "label": "Description",
+      "default": "Your order is being prepared"
+    },
+    {
+      "type": "text",
+      "id": "step_2_date",
+      "label": "Date"
+    },
+    {
+      "type": "select",
+      "id": "step_2_status",
+      "label": "Status",
+      "options": [
+        {
+          "value": "completed",
+          "label": "Completed"
+        },
+        {
+          "value": "active",
+          "label": "Active"
+        },
+        {
+          "value": "pending",
+          "label": "Pending"
+        }
+      ],
+      "default": "completed"
+    },
+    {
+      "type": "header",
+      "content": "Step 3"
+    },
+    {
+      "type": "checkbox",
+      "id": "step_3_enabled",
+      "label": "Enable step 3",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "step_3_title",
+      "label": "Title",
+      "default": "Shipped"
+    },
+    {
+      "type": "text",
+      "id": "step_3_description",
+      "label": "Description",
+      "default": "Your package is on the way"
+    },
+    {
+      "type": "text",
+      "id": "step_3_date",
+      "label": "Date"
+    },
+    {
+      "type": "select",
+      "id": "step_3_status",
+      "label": "Status",
+      "options": [
+        {
+          "value": "completed",
+          "label": "Completed"
+        },
+        {
+          "value": "active",
+          "label": "Active"
+        },
+        {
+          "value": "pending",
+          "label": "Pending"
+        }
+      ],
+      "default": "active"
+    },
+    {
+      "type": "header",
+      "content": "Step 4"
+    },
+    {
+      "type": "checkbox",
+      "id": "step_4_enabled",
+      "label": "Enable step 4",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "step_4_title",
+      "label": "Title",
+      "default": "Out for delivery"
+    },
+    {
+      "type": "text",
+      "id": "step_4_description",
+      "label": "Description",
+      "default": "Package is out for delivery"
+    },
+    {
+      "type": "text",
+      "id": "step_4_date",
+      "label": "Date"
+    },
+    {
+      "type": "select",
+      "id": "step_4_status",
+      "label": "Status",
+      "options": [
+        {
+          "value": "completed",
+          "label": "Completed"
+        },
+        {
+          "value": "active",
+          "label": "Active"
+        },
+        {
+          "value": "pending",
+          "label": "Pending"
+        }
+      ],
+      "default": "pending"
+    },
+    {
+      "type": "header",
+      "content": "Step 5"
+    },
+    {
+      "type": "checkbox",
+      "id": "step_5_enabled",
+      "label": "Enable step 5",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "step_5_title",
+      "label": "Title",
+      "default": "Delivered"
+    },
+    {
+      "type": "text",
+      "id": "step_5_description",
+      "label": "Description",
+      "default": "Package has been delivered"
+    },
+    {
+      "type": "text",
+      "id": "step_5_date",
+      "label": "Date"
+    },
+    {
+      "type": "select",
+      "id": "step_5_status",
+      "label": "Status",
+      "options": [
+        {
+          "value": "completed",
+          "label": "Completed"
+        },
+        {
+          "value": "active",
+          "label": "Active"
+        },
+        {
+          "value": "pending",
+          "label": "Pending"
+        }
+      ],
+      "default": "pending"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Shipping checkpoint"
+    }
+  ]
+}
 {% endschema %}
